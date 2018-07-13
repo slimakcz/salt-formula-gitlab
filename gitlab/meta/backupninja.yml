@@ -1,0 +1,5 @@
+backup:
+  gitlab:
+    fs_includes:
+    - /var/opt/gitlab/git-data
+    fs_excludes: []

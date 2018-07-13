@@ -2,27 +2,7 @@
 
 {%- set version = pillar.gitlab.server.get('version', '6.5') %}
 
-{%- if version == '6.0' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.1' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.2' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.3' %}
-{%- set shell_version = '1.7.4' %}
-{%- elif version == '6.4' %}
-{%- set shell_version = '1.8.0' %}
-{%- elif version == '6.5' %}
-{%- set shell_version = '1.8.0' %}
-{%- elif version == '6.6' %}
-{%- set shell_version = '1.9' %}
-{%- elif version == '7.2' %}
-{%- set shell_version = '2.0' %}
-{%- elif version == '7.3' %}
-{%- set shell_version = '2.0.1' %}
-{%- elif version == '7.4' %}
-{%- set shell_version = '2.0.1' %}
-{%- elif version == '7.7' %}
+{%- if version == '7.7' %}
 {%- set shell_version = '2.4.1' %}
 {%- else %}
 {%- set shell_version = '2.4.1' %}
@@ -34,15 +14,41 @@
         'version': version,
         'shell_version': shell_version,
         'repository': {},
-        'pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libgdbm-dev", "libreadline-dev", "libncurses5-dev", "libffi-dev", "checkinstall", "libxml2-dev", "libxslt1-dev",  "libmysqlclient-dev", "libpq-dev", "libcurl4-openssl-dev", "libicu-dev", "curl", "python-docutils", "cmake"]
+        'pkgs': ['gitlab-ce'],
+        'source': {
+          'engine': 'pkg',
+        },
+        'source_pkgs': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libgdbm-dev", "libreadline-dev", "libncurses5-dev", "libffi-dev", "checkinstall", "libxml2-dev", "libxslt1-dev",  "libmysqlclient-dev", "libpq-dev", "libcurl4-openssl-dev", "libicu-dev", "curl", "python-docutils", "cmake"],
+        'workhorse': {
+          'bind': {
+            'host': '127.0.0.1',
+            'port': 8181
+          }
+        },
+        'unicorn': {
+          'bind': {
+            'host': '127.0.0.1',
+            'port': 8080
+          }
+        },
+        'http_proxy': none,
+        'https_proxy': none,
+        'no_proxy': none
     },
 }, merge=salt['pillar.get']('gitlab:server')) %}
 
 {%- endif %}
 
-{% set client = salt['grains.filter_by']({
+{%- load_yaml as client_defaults %}
+Debian:
+  pkgs:
+  - python-gitlab
+{%- endload %}
+{% set client = salt['grains.filter_by'](client_defaults, merge=salt['pillar.get']('gitlab:client')) %}
+
+{% set runner = salt['grains.filter_by']({
     'default': {
-        'pkg': ["build-essential", "zlib1g-dev", "libyaml-dev", "libssl-dev", "libffi-dev"],
-        'pip': "python-gitlab"
-    },
-}, merge=salt['pillar.get']('gitlab:client')) %}
+        'concurrent': 3,
+        'check_interval': 0
+    }
+}, merge=salt['pillar.get']('gitlab:runner')) %}

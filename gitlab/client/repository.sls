@@ -1,14 +1,6 @@
 {%- from "gitlab/map.jinja" import client with context %}
 {%- if client.enabled %}
 
-gitlab_client_packages:
-  pkg.installed:
-  - names: {{ client.pkg }}
-  pip.installed:
-  - name: {{ client.pip }}
-  - require:
-    - pkg: gitlab_client_packages
-
 {%- for group_name, group in client.get('group', {}).iteritems() %}
 
 {%- if group.get('enabled', true) %}
@@ -87,46 +79,6 @@ gitlab_deploykey_{{ repo_name }}_{{ key_name }}:
   gitlab.deploykey_absent:
   - name: {{ key_name }}
   - key: {{ key.key }}
-  - project: {{ repo_name }}
-
-{%- endif %}
-
-{%- endfor %}
-
-{%- for hook_name, hook in repo.get('hook', {}).iteritems() %}
-
-{%- if hook.enabled %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_present:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- else %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_absent:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- endif %}
-
-{%- endfor %}
-
-{%- for hook_name, hook in client.get('global_hook', {}).iteritems() %}
-
-{%- if hook.enabled %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_present:
-  - name: {{ hook.address }}
-  - project: {{ repo_name }}
-
-{%- else %}
-
-gitlab_hook_{{ repo_name }}_{{ hook_name }}:
-  gitlab.hook_absent:
-  - name: {{ hook.address }}
   - project: {{ repo_name }}
 
 {%- endif %}
